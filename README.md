@@ -12,19 +12,19 @@ internet, but it seemed to miss other libraries that I required.
 4. Finally, came across Content MD-5 which could be implemented by hashlib
 python library and didn’t need any additional setup.
 
-S3 LINK :
-1. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.class
-2. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.contacts
-3. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.data.0.Current
-4. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.data.1.AllData
-5. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.duration
-6. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.footnote
-7. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.measure
-8. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.period
-9. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.seasonal
-10. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.series
-11. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.sector
-12. https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.txt
+### S3 Links :
+- [pr.class](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.class)
+- [pr.contacts](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.contacts)
+- [pr.data.0.Current](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.data.0.Current)
+- [pr.data.1.AllData](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.data.1.AllData)
+- [pr.duration](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.duration)
+- [pr.footnote](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.footnote)
+- [pr.measure](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.measure)
+- [pr.period](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.period)
+- [pr.seasonal](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.seasonal)
+- [pr.series](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.series)
+- [pr.sector](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.sector)
+- [pr.txt](https://bls-gov-dataset.s3.ap-southeast-2.amazonaws.com/bls-data/pr.txt)
 
 
 
@@ -56,23 +56,23 @@ expensive as they have way more capabilities (incurred 10$)
 limit on S3 free tier so could not test. But below are the extra steps that I took
 which were not included when I was working on Part 1,2 and 3.
 
-**a. Creation of an EventBridge schedule to schedule the data fetching
+- **Creation of an EventBridge schedule to schedule the data fetching
 lambdas daily**
 
 <img width="1493" alt="image" src="https://github.com/user-attachments/assets/973239f6-8f72-4d53-9e68-dc92cc345ef4" />
 
 
 
-**b. Creation of S3 notifications which would get triggered whenever there
+- **Creation of S3 notifications which would get triggered whenever there
 is an addition or deletion to the bucket**
 
 <img width="1497" alt="image" src="https://github.com/user-attachments/assets/35548ed7-106e-465b-8833-ada3d3a8f212" />
 
 
 
-**c. Publishing of these notifications to an SQS Queue.**
+- **Publishing of these notifications to an SQS Queue.**
 
-**d. Created one more lambda which would get triggered as soon as a
+- **Created one more lambda which would get triggered as soon as a
 message arrived in the SQS Queue. This lambda was used to trigger
 the Glue Job for performing data Analysis**
 
@@ -81,10 +81,10 @@ the Glue Job for performing data Analysis**
 
 
 3. This was done incrementally. Apologies for the undescriptive names. First
-stack was for lambdas and buckets. Second stack included Queue.
+stack was for lambdas and buckets. Second stack included Queue. Allcomp was the final stack with all the components. Template code has been uploaded
 <img width="1483" alt="image" src="https://github.com/user-attachments/assets/fbaf98a3-ae22-4ecd-b2bf-678f1bdeb7fa" />
 
-4. Final Iac looked like below
+4. Final Infrastructure as Code looked like below
 <img width="1486" alt="image" src="https://github.com/user-attachments/assets/50b4fec7-63a0-4d0b-b783-da8c8ff8d5c5" />
 
 
