@@ -14,7 +14,7 @@ USER_AGENT = "niharika.singh0625@gmail.com"
 UPLOAD_TO_S3 = True
 S3_BUCKET = os.getenv("S3_BUCKET_NAME","bls-gov-dataset")  # Fetch bucket name from environment variable
 S3_PREFIX = os.getenv("S3_PREFIX", "bls-data/")  # Folder inside the bucket (default: bls-data/)
-AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")  # Fetch AWS region (default to us-east-1)
+AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")  
 
 # Initialize S3 client
 s3_client = boto3.client("s3")
