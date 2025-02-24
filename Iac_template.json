@@ -1,0 +1,273 @@
+{
+  "Resources": {
+    "S3EventQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "s3_event_queue_v1",
+        "VisibilityTimeout": 910
+      }
+    },
+    "S3EventQueuePolicy": {
+      "Type": "AWS::SQS::QueuePolicy",
+      "DependsOn": [
+        "S3EventQueue"
+      ],
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "S3EventQueue"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "s3.amazonaws.com"
+              },
+              "Action": "sqs:SendMessage",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "S3EventQueue",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "ArnLike": {
+                  "aws:SourceArn": "arn:aws:s3:::bls-gov-dataset"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "DependsOn": [
+        "S3EventQueuePolicy"
+      ],
+      "Properties": {
+        "BucketName": "bls-gov-dataset",
+        "NotificationConfiguration": {
+          "QueueConfigurations": [
+            {
+              "Event": "s3:ObjectCreated:*",
+              "Queue": {
+                "Fn::GetAtt": [
+                  "S3EventQueue",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Event": "s3:ObjectRemoved:*",
+              "Queue": {
+                "Fn::GetAtt": [
+                  "S3EventQueue",
+                  "Arn"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "LambdaS3SQSLambdaExecutionRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "LambdaSQSPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "S3EventQueue",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": "logs:CreateLogGroup",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "fetchdstest": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "S3Bucket",
+        "S3EventQueue"
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "code-repository-quest",
+          "S3Key": "fetch_ds-iac.zip"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Description": "",
+        "MemorySize": 128,
+        "Timeout": 843,
+        "Handler": "lambda_function.lambda_handler",
+        "Runtime": "python3.12",
+        "Architectures": [
+          "x86_64"
+        ],
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET_NAME": "bls-gov-dataset"
+          }
+        }
+      }
+    },
+    "fetchdstestEventInvokeConfig": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "DependsOn": [
+        "fetchdstest"
+      ],
+      "Properties": {
+        "FunctionName": {
+          "Ref": "fetchdstest"
+        },
+        "MaximumEventAgeInSeconds": 21600,
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 2
+      }
+    },
+    "fetchpublicdatasettest": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "S3Bucket",
+        "S3EventQueue"
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "code-repository-quest",
+          "S3Key": "fetch-public-dataset-iac.zip"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Description": "",
+        "MemorySize": 128,
+        "Timeout": 900,
+        "Handler": "lambda_function.lambda_handler",
+        "Runtime": "python3.9",
+        "Architectures": [
+          "x86_64"
+        ],
+        "EphemeralStorage": {
+          "Size": 1024
+        },
+        "Environment": {
+          "Variables": {
+            "PATH": "/opt/aws-cli/bin"
+          }
+        }
+      }
+    },
+    "fetchpublicdatasettestEventInvokeConfig": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "DependsOn": [
+        "fetchpublicdatasettest"
+      ],
+      "Properties": {
+        "FunctionName": {
+          "Ref": "fetchpublicdatasettest"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumEventAgeInSeconds": 21600,
+        "MaximumRetryAttempts": 2
+      }
+    },
+    "LambdaSQSTrigger1": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "fetchdstest"
+      ],
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "S3EventQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "fetchdstest"
+        },
+        "Enabled": true
+      }
+    },
+    "LambdaSQSTrigger2": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "fetchpublicdatasettest"
+      ],
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "S3EventQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "fetchpublicdatasettest"
+        },
+        "Enabled": true
+      }
+    }
+  }
+}
