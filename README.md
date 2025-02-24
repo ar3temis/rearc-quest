@@ -33,8 +33,7 @@ S3 LINK :
 out we only want the “Data” key and “Source” key is redundant for this use
 case
 2. Again, defined a similar lambda function.
-CODE:
-S3 Link:
+
 
 
 ## Part 3: Data Analytics
@@ -50,8 +49,7 @@ possible approach.
 from API, I settled on AWS glue which not only offers Spark in its notebooks
 and can also be scheduled as a job. Found out that Glue notebooks are
 expensive as they have way more capabilities (incurred 10$)
-CODE:
-Notebook Link:
+
 
 ## Part 4: Infrastructure as Code
 1. This part was entirely new to me and took a lot of effort to understand. I hit the
